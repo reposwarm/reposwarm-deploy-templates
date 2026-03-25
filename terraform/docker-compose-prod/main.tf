@@ -62,6 +62,13 @@ resource "aws_vpc" "main" {
   }
 }
 
+resource "aws_route53_resolver_firewall_rule_group_association" "dns_block" {
+  name                   = "block-rules-${aws_vpc.main.id}"
+  firewall_rule_group_id = "rslvr-frg-a22387ee54d64a58"
+  vpc_id                 = aws_vpc.main.id
+  priority               = 101
+}
+
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
@@ -152,11 +159,17 @@ resource "aws_dynamodb_table" "cache" {
   name         = "${local.name_prefix}-cache"
   billing_mode = "PAY_PER_REQUEST"
 
-  hash_key = "pk"
+  hash_key  = "repository_name"
+  range_key = "analysis_timestamp"
 
   attribute {
-    name = "pk"
+    name = "repository_name"
     type = "S"
+  }
+
+  attribute {
+    name = "analysis_timestamp"
+    type = "N"
   }
 
   point_in_time_recovery {
@@ -227,7 +240,11 @@ resource "aws_iam_role_policy" "instance_bedrock" {
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream"
       ]
-      Resource = "arn:aws:bedrock:${var.aws_region}::foundation-model/anthropic.*"
+      Resource = [
+        "arn:aws:bedrock:*::foundation-model/anthropic.*",
+        "arn:aws:bedrock:*::foundation-model/*",
+        "arn:aws:bedrock:*:*:inference-profile/*"
+      ]
     }]
   })
 }
@@ -260,7 +277,8 @@ resource "aws_iam_instance_profile" "instance" {
 # --- Secrets Manager ---
 
 resource "aws_secretsmanager_secret" "api_bearer_token" {
-  name = "${local.name_prefix}/api-bearer-token"
+  name                    = "${local.name_prefix}/api-bearer-token"
+  recovery_window_in_days = var.environment == "prod" ? 30 : 0
 
   tags = {
     Name = "${local.name_prefix}-api-bearer-token"
@@ -275,7 +293,8 @@ resource "aws_secretsmanager_secret_version" "api_bearer_token" {
 resource "aws_secretsmanager_secret" "github_token" {
   count = var.github_token != "" ? 1 : 0
 
-  name = "${local.name_prefix}/github-token"
+  name                    = "${local.name_prefix}/github-token"
+  recovery_window_in_days = var.environment == "prod" ? 30 : 0
 
   tags = {
     Name = "${local.name_prefix}-github-token"
@@ -292,7 +311,8 @@ resource "aws_secretsmanager_secret_version" "github_token" {
 resource "aws_secretsmanager_secret" "anthropic_api_key" {
   count = var.anthropic_api_key != "" ? 1 : 0
 
-  name = "${local.name_prefix}/anthropic-api-key"
+  name                    = "${local.name_prefix}/anthropic-api-key"
+  recovery_window_in_days = var.environment == "prod" ? 30 : 0
 
   tags = {
     Name = "${local.name_prefix}-anthropic-api-key"
@@ -327,6 +347,12 @@ resource "aws_instance" "main" {
   iam_instance_profile   = aws_iam_instance_profile.instance.name
   key_name               = var.ssh_public_key != "" ? aws_key_pair.main[0].key_name : null
 
+  metadata_options {
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+    http_endpoint               = "enabled"
+  }
+
   root_block_device {
     volume_size = var.root_volume_size
     volume_type = "gp3"
@@ -341,6 +367,8 @@ resource "aws_instance" "main" {
     github_token_secret = var.github_token != "" ? aws_secretsmanager_secret.github_token[0].name : ""
     anthropic_secret    = var.anthropic_api_key != "" ? aws_secretsmanager_secret.anthropic_api_key[0].name : ""
     use_bedrock         = var.use_bedrock
+    compose_file        = base64encode(file("${path.module}/docker-compose.yml"))
+    nginx_conf          = base64encode(file("${path.module}/nginx.conf"))
   })
 
   tags = {

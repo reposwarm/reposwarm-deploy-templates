@@ -7,10 +7,23 @@ set -euo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-echo ">>> Installing Docker..."
+echo ">>> Installing dependencies..."
 apt-get update -y
-apt-get install -y ca-certificates curl gnupg jq awscli
+apt-get install -y ca-certificates curl gnupg jq unzip
 
+echo ">>> Installing AWS CLI v2..."
+ARCH=$(uname -m)
+if [ "$ARCH" = "aarch64" ]; then
+  CLI_ARCH="aarch64"
+else
+  CLI_ARCH="x86_64"
+fi
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$CLI_ARCH.zip" -o /tmp/awscliv2.zip
+unzip -q /tmp/awscliv2.zip -d /tmp
+/tmp/aws/install
+rm -rf /tmp/awscliv2.zip /tmp/aws
+
+echo ">>> Installing Docker..."
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 chmod a+r /etc/apt/keyrings/docker.asc
@@ -72,11 +85,13 @@ ENVEOF
 
 chmod 600 /opt/reposwarm/.env
 
-# --- Write docker-compose.yml ---
+# --- Write docker-compose.yml (base64-encoded to avoid interpolation issues) ---
 echo ">>> Writing docker-compose.yml..."
-cat > /opt/reposwarm/docker-compose.yml <<'COMPOSEEOF'
-${file("${path.module}/docker-compose.yml")}
-COMPOSEEOF
+echo "${compose_file}" | base64 -d > /opt/reposwarm/docker-compose.yml
+
+# --- Write nginx.conf ---
+echo ">>> Writing nginx.conf..."
+echo "${nginx_conf}" | base64 -d > /opt/reposwarm/nginx.conf
 
 # --- Start services ---
 echo ">>> Starting RepoSwarm..."

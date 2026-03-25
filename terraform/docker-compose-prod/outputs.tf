@@ -7,6 +7,11 @@ output "instance_public_ip" {
   value       = aws_eip.instance.public_ip
 }
 
+output "public_ip" {
+  description = "Public IP (Elastic IP) of the instance (alias)"
+  value       = aws_eip.instance.public_ip
+}
+
 output "ssh_command" {
   description = "SSH command to connect"
   value       = "ssh ubuntu@${aws_eip.instance.public_ip}"
