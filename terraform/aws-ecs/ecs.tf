@@ -366,11 +366,11 @@ resource "aws_ecs_task_definition" "api" {
     ]
 
     healthCheck = {
-      command     = ["CMD-SHELL", "curl -f http://localhost:3000/v1/health || exit 1"]
+      command     = ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))\""]
       interval    = 30
-      timeout     = 5
-      retries     = 3
-      startPeriod = 60
+      timeout     = 10
+      retries     = 5
+      startPeriod = 120
     }
 
     logConfiguration = {

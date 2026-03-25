@@ -10,11 +10,17 @@ resource "aws_dynamodb_table" "cache" {
   read_capacity  = var.dynamodb_billing_mode == "PROVISIONED" ? var.dynamodb_read_capacity : null
   write_capacity = var.dynamodb_billing_mode == "PROVISIONED" ? var.dynamodb_write_capacity : null
 
-  hash_key = "pk"
+  hash_key  = "repository_name"
+  range_key = "analysis_timestamp"
 
   attribute {
-    name = "pk"
+    name = "repository_name"
     type = "S"
+  }
+
+  attribute {
+    name = "analysis_timestamp"
+    type = "N"
   }
 
   point_in_time_recovery {
