@@ -148,3 +148,9 @@ variable "rds_allocated_storage" {
   type        = number
   default     = 20
 }
+
+variable "allowed_cidrs" {
+  description = "CIDR blocks allowed to access services. Defaults to VPC CIDR only."
+  type        = list(string)
+  default     = []
+}

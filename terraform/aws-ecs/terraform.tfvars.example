@@ -54,3 +54,7 @@ use_bedrock       = false
 
 # Logging
 log_retention_days = 30
+
+# SECURITY: CIDR blocks allowed to access services (default: VPC-only)
+# Set to your IP for testing, or leave empty for VPC-internal only
+# allowed_cidrs = ["YOUR.IP.HERE/32"]

@@ -12,7 +12,7 @@ resource "aws_security_group" "alb" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = length(var.allowed_cidrs) > 0 ? var.allowed_cidrs : [var.vpc_cidr]
   }
 
   ingress {
@@ -20,7 +20,7 @@ resource "aws_security_group" "alb" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = length(var.allowed_cidrs) > 0 ? var.allowed_cidrs : [var.vpc_cidr]
   }
 
   egress {
@@ -46,7 +46,7 @@ resource "aws_lb" "main" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = aws_subnet.public[*].id
 
-  enable_deletion_protection = true
+  enable_deletion_protection = false
 
   tags = {
     Name = "${local.name_prefix}-alb"

@@ -24,3 +24,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+*.tfplan
+tfplan
+tfplan2
+terraform.tfvars

@@ -203,6 +203,10 @@ resource "aws_ecs_task_definition" "temporal" {
       { name = "DB_PORT", value = "5432" },
       { name = "POSTGRES_USER", value = "temporal" },
       { name = "POSTGRES_SEEDS", value = split(":", aws_db_instance.temporal.endpoint)[0] },
+      { name = "POSTGRES_TLS_ENABLED", value = "true" },
+      { name = "POSTGRES_TLS_DISABLE_HOST_VERIFICATION", value = "true" },
+      { name = "SQL_TLS_ENABLED", value = "true" },
+      { name = "SQL_TLS", value = "true" },
     ]
 
     secrets = [
@@ -235,8 +239,9 @@ resource "aws_ecs_service" "temporal" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = aws_subnet.private[*].id
-    security_groups = [aws_security_group.ecs_tasks.id]
+    subnets          = aws_subnet.public[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = true
   }
 
   service_registries {
@@ -297,8 +302,9 @@ resource "aws_ecs_service" "temporal_ui" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = aws_subnet.private[*].id
-    security_groups = [aws_security_group.ecs_tasks.id]
+    subnets          = aws_subnet.public[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = true
   }
 
   service_registries {
@@ -390,8 +396,9 @@ resource "aws_ecs_service" "api" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = aws_subnet.private[*].id
-    security_groups = [aws_security_group.ecs_tasks.id]
+    subnets          = aws_subnet.public[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = true
   }
 
   service_registries {
@@ -481,8 +488,9 @@ resource "aws_ecs_service" "worker" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = aws_subnet.private[*].id
-    security_groups = [aws_security_group.ecs_tasks.id]
+    subnets          = aws_subnet.public[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = true
   }
 
   tags = {
@@ -555,8 +563,9 @@ resource "aws_ecs_service" "ui" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = aws_subnet.private[*].id
-    security_groups = [aws_security_group.ecs_tasks.id]
+    subnets          = aws_subnet.public[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = true
   }
 
   load_balancer {

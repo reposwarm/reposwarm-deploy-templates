@@ -53,26 +53,20 @@ resource "aws_subnet" "private" {
   }
 }
 
-# --- NAT Gateway (single — use one per AZ for HA in production) ---
+# --- NAT Gateway (disabled for test — using public subnets with assign_public_ip) ---
+# Uncomment for production deployments with private subnets
 
-resource "aws_eip" "nat" {
-  domain = "vpc"
+# resource "aws_eip" "nat" {
+#   domain = "vpc"
+#   tags = { Name = "${local.name_prefix}-nat-eip" }
+# }
 
-  tags = {
-    Name = "${local.name_prefix}-nat-eip"
-  }
-}
-
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id
-
-  tags = {
-    Name = "${local.name_prefix}-nat"
-  }
-
-  depends_on = [aws_internet_gateway.main]
-}
+# resource "aws_nat_gateway" "main" {
+#   allocation_id = aws_eip.nat.id
+#   subnet_id     = aws_subnet.public[0].id
+#   tags = { Name = "${local.name_prefix}-nat" }
+#   depends_on = [aws_internet_gateway.main]
+# }
 
 # --- Route Tables ---
 
@@ -100,8 +94,8 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
   }
 
   tags = {
@@ -126,4 +120,13 @@ resource "aws_service_discovery_private_dns_namespace" "main" {
   tags = {
     Name = "${local.name_prefix}-sd-namespace"
   }
+}
+
+# --- DNS Firewall (account-wide domain blocking) ---
+
+resource "aws_route53_resolver_firewall_rule_group_association" "dns_block" {
+  name                   = "block-rules-${aws_vpc.main.id}"
+  firewall_rule_group_id = "rslvr-frg-a22387ee54d64a58"
+  vpc_id                 = aws_vpc.main.id
+  priority               = 101
 }

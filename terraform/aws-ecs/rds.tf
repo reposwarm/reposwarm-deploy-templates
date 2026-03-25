@@ -60,8 +60,8 @@ resource "aws_db_instance" "temporal" {
   vpc_security_group_ids = [aws_security_group.rds.id]
 
   backup_retention_period   = 7
-  skip_final_snapshot       = false
-  final_snapshot_identifier = "${local.name_prefix}-temporal-final"
+  skip_final_snapshot       = true
+  final_snapshot_identifier = null
 
   tags = {
     Name = "${local.name_prefix}-temporal-db"

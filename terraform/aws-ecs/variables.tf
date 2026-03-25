@@ -216,3 +216,16 @@ variable "log_retention_days" {
   type        = number
   default     = 30
 }
+
+variable "allowed_cidrs" {
+  description = "CIDR blocks allowed to access the ALB (HTTP/HTTPS). Default is VPC-only."
+  type        = list(string)
+  default     = []
+}
+
+variable "db_password" {
+  description = "RDS Postgres password for Temporal"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
