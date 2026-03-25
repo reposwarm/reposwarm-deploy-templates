@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  RepoSwarm ECS Stack — Basic CloudFormation template.
+  Community contributions welcome! See README.md for details.
+
+# ============================================================
+# This is a placeholder template to get you started.
+# For a fully-featured deployment, use the Terraform templates
+# in terraform/aws-ecs/ which provide:
+#   - VPC + subnets + NAT
+#   - ECS Fargate services for all components
+#   - ALB with HTTPS
+#   - RDS Postgres for Temporal
+#   - DynamoDB for caching
+#   - Secrets Manager integration
+#   - IAM roles with least-privilege
+# ============================================================
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues: [prod, staging, dev]
+
+  VpcCIDR:
+    Type: String
+    Default: "10.0.0.0/16"
+
+  ApiBearerToken:
+    Type: String
+    NoEcho: true
+    Description: Bearer token for API authentication
+
+  GithubToken:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: GitHub personal access token for the worker
+
+Resources:
+  # --- VPC ---
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "reposwarm-${Environment}-vpc"
+        - Key: Project
+          Value: reposwarm
+        - Key: ManagedBy
+          Value: cloudformation
+
+  # --- DynamoDB ---
+  CacheTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "reposwarm-${Environment}-cache"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Project
+          Value: reposwarm
+        - Key: ManagedBy
+          Value: cloudformation
+
+  # --- Secrets ---
+  ApiBearerTokenSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "reposwarm-${Environment}/api-bearer-token"
+      SecretString: !Ref ApiBearerToken
+      Tags:
+        - Key: Project
+          Value: reposwarm
+
+  # --- ECS Cluster ---
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "reposwarm-${Environment}-cluster"
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+      Tags:
+        - Key: Project
+          Value: reposwarm
+        - Key: ManagedBy
+          Value: cloudformation
+
+  # TODO: Add the following resources (community contributions welcome!):
+  # - Internet Gateway + NAT Gateway
+  # - Public and Private Subnets
+  # - ALB + Target Groups + Listeners
+  # - RDS Postgres for Temporal
+  # - ECS Task Definitions for each service
+  # - ECS Services with Fargate launch type
+  # - IAM Roles (execution + task roles)
+  # - CloudWatch Log Groups
+  # - Service Discovery namespace
+
+Outputs:
+  VPCId:
+    Description: VPC ID
+    Value: !Ref VPC
+
+  ClusterName:
+    Description: ECS Cluster Name
+    Value: !Ref ECSCluster
+
+  DynamoDBTable:
+    Description: DynamoDB Cache Table
+    Value: !Ref CacheTable

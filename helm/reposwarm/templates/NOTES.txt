@@ -1,0 +1,28 @@
+RepoSwarm has been deployed!
+
+{{- if .Values.ingress.enabled }}
+Access the application at:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+
+To access the UI, run:
+  kubectl port-forward svc/{{ include "reposwarm.fullname" . }}-ui 3000:3000 -n {{ .Values.global.namespace }}
+  Then visit: http://localhost:3000
+
+To access the API:
+  kubectl port-forward svc/{{ include "reposwarm.fullname" . }}-api 3001:3000 -n {{ .Values.global.namespace }}
+  Then visit: http://localhost:3001/v1/health
+
+To access Temporal UI:
+  kubectl port-forward svc/{{ include "reposwarm.fullname" . }}-temporal-ui 8080:8080 -n {{ .Values.global.namespace }}
+  Then visit: http://localhost:8080
+{{- end }}
+
+Check pod status:
+  kubectl get pods -n {{ .Values.global.namespace }}
+
+View logs:
+  kubectl logs -f deployment/{{ include "reposwarm.fullname" . }}-api -n {{ .Values.global.namespace }}
+  kubectl logs -f deployment/{{ include "reposwarm.fullname" . }}-worker -n {{ .Values.global.namespace }}

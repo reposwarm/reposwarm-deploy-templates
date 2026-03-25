@@ -1,0 +1,17 @@
+apiVersion: v2
+name: reposwarm
+description: A Helm chart for deploying RepoSwarm — AI-powered repository analysis platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - reposwarm
+  - repository-analysis
+  - temporal
+  - ai
+home: https://github.com/reposwarm
+sources:
+  - https://github.com/reposwarm/reposwarm-deploy-templates
+maintainers:
+  - name: RepoSwarm
+    url: https://github.com/reposwarm

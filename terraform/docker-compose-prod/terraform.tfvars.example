@@ -1,0 +1,20 @@
+# terraform.tfvars.example
+
+aws_region        = "us-east-1"
+environment       = "prod"
+availability_zone = "us-east-1a"
+
+# Instance
+instance_type    = "t4g.xlarge"
+instance_arch    = "arm64"
+root_volume_size = 50
+
+# SSH
+ssh_public_key     = "ssh-ed25519 AAAA..."
+ssh_allowed_cidrs  = ["YOUR_IP/32"]
+
+# Secrets (required)
+api_bearer_token = "CHANGE_ME"
+github_token     = ""
+anthropic_api_key = ""
+use_bedrock       = false

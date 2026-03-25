@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "reposwarm.fullname" . }}-temporal
+  labels:
+    {{- include "reposwarm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: temporal
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7233
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: {{ .Release.Name }}

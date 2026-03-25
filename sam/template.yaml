@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  RepoSwarm SAM Template — Placeholder for serverless components.
+  Community contributions welcome!
+
+# ============================================================
+# This is a placeholder for future serverless components of
+# RepoSwarm (e.g., API Gateway + Lambda for lightweight endpoints,
+# event-driven processing, etc.)
+#
+# The core RepoSwarm platform uses long-running containers
+# (ECS/EKS/Docker). SAM may be useful for:
+#   - Webhook receivers
+#   - Scheduled cleanup jobs
+#   - Event-driven notification handlers
+#   - API Gateway fronting the ECS services
+# ============================================================
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures:
+      - arm64
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: !Ref CacheTable
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+
+Resources:
+  CacheTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "reposwarm-${Environment}-cache"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+
+  # Example: Webhook receiver function
+  # WebhookFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/webhook/
+  #     Handler: app.lambda_handler
+  #     Events:
+  #       Webhook:
+  #         Type: Api
+  #         Properties:
+  #           Path: /webhook
+  #           Method: post
+
+Outputs:
+  DynamoDBTable:
+    Description: DynamoDB Cache Table
+    Value: !Ref CacheTable

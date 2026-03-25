@@ -1,0 +1,158 @@
+# --------------------------------------------------
+# RepoSwarm Helm Chart — Default Values
+# --------------------------------------------------
+
+# Global settings
+global:
+  namespace: reposwarm
+
+# AWS configuration
+aws:
+  region: us-east-1
+  dynamodbTable: reposwarm-cache
+
+# Secrets (override via --set-string or external secrets operator)
+secrets:
+  apiBearerToken: ""
+  githubToken: ""
+  gitlabToken: ""
+  anthropicApiKey: ""
+
+# --------------------------------------------------
+# Postgres (in-cluster for dev/standalone — disable for RDS)
+# --------------------------------------------------
+postgres:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "16-alpine"
+  replicas: 1
+  storage:
+    size: 10Gi
+    storageClass: ""
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 250m
+  credentials:
+    user: temporal
+    password: temporal
+    database: temporal
+
+# --------------------------------------------------
+# Temporal Server
+# --------------------------------------------------
+temporal:
+  image:
+    repository: temporalio/auto-setup
+    tag: latest
+  replicas: 1
+  postgres:
+    host: ""
+    port: "5432"
+    user: temporal
+    password: temporal
+  resources:
+    limits:
+      memory: 2Gi
+      cpu: "1"
+    requests:
+      memory: 1Gi
+      cpu: 500m
+
+# --------------------------------------------------
+# Temporal UI
+# --------------------------------------------------
+temporalUi:
+  image:
+    repository: temporalio/ui
+    tag: latest
+  replicas: 1
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+
+# --------------------------------------------------
+# API
+# --------------------------------------------------
+api:
+  image:
+    repository: ghcr.io/reposwarm/api
+    tag: latest
+  replicas: 2
+  port: 3000
+  resources:
+    limits:
+      memory: 1Gi
+      cpu: 500m
+    requests:
+      memory: 512Mi
+      cpu: 250m
+  serviceAccount:
+    create: true
+    annotations: {}
+
+# --------------------------------------------------
+# Worker
+# --------------------------------------------------
+worker:
+  image:
+    repository: ghcr.io/reposwarm/worker
+    tag: latest
+  replicas: 2
+  useBedrock: "false"
+  resources:
+    limits:
+      memory: 4Gi
+      cpu: "2"
+    requests:
+      memory: 2Gi
+      cpu: "1"
+  serviceAccount:
+    create: true
+    annotations: {}
+
+# --------------------------------------------------
+# UI
+# --------------------------------------------------
+ui:
+  image:
+    repository: ghcr.io/reposwarm/ui
+    tag: latest
+  replicas: 2
+  port: 3000
+  resources:
+    limits:
+      memory: 1Gi
+      cpu: 500m
+    requests:
+      memory: 512Mi
+      cpu: 250m
+  serviceAccount:
+    create: true
+    annotations: {}
+
+# --------------------------------------------------
+# Ingress
+# --------------------------------------------------
+ingress:
+  enabled: false
+  className: alb
+  annotations: {}
+  hosts:
+    - host: reposwarm.example.com
+      paths:
+        - path: /v1
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: ui
+  tls: []
