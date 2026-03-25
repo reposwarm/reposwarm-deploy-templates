@@ -13,7 +13,18 @@ Production deployment templates for [RepoSwarm](https://github.com/reposwarm) �
 | [CloudFormation](./cloudformation/) | Basic ECS stack (placeholder) | AWS-native IaC preference |
 | [SAM](./sam/) | Serverless template (placeholder) | Future serverless components |
 
-> **Looking for local development?** Use `reposwarm new --local` from the [RepoSwarm CLI](https://github.com/reposwarm/cli).
+> **Looking for local development?** Use `reposwarm new --local` from the [RepoSwarm CLI](https://github.com/reposwarm/cli). It runs everything on your machine with zero restrictions — no Terraform, no cloud resources needed.
+
+## 🔒 Security
+
+All production templates default to **VPC-internal access only** — no public ingress. To allow external access, explicitly set `allowed_cidrs` in your `terraform.tfvars`:
+
+```hcl
+# Allow access from your IP only
+allowed_cidrs = ["YOUR.PUBLIC.IP/32"]
+```
+
+For local development without restrictions, use `reposwarm new --local` instead of these templates.
 
 ## 📦 RepoSwarm Services
 

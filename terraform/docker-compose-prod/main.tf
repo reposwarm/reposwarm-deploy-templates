@@ -126,7 +126,7 @@ resource "aws_security_group" "instance" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = length(var.allowed_cidrs) > 0 ? var.allowed_cidrs : ["0.0.0.0/0"]
+    cidr_blocks = length(var.allowed_cidrs) > 0 ? var.allowed_cidrs : [var.vpc_cidr]
   }
 
   ingress {
@@ -134,7 +134,7 @@ resource "aws_security_group" "instance" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = length(var.allowed_cidrs) > 0 ? var.allowed_cidrs : ["0.0.0.0/0"]
+    cidr_blocks = length(var.allowed_cidrs) > 0 ? var.allowed_cidrs : [var.vpc_cidr]
   }
 
   egress {

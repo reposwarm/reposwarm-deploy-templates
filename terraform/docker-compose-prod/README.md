@@ -2,6 +2,20 @@
 
 Deploy RepoSwarm on a single EC2 instance with Docker Compose. Ideal for small teams, demos, and VPS deployments.
 
+> **🏠 Local Development?** Don't use this template — run `reposwarm new --local` instead. It spins up everything on your machine with no security restrictions, no Terraform, and no cloud resources. This template is for **production VM deployments** where services are locked down by default.
+
+## Security
+
+By default, HTTP/HTTPS access is restricted to the VPC CIDR (internal only). To allow external access, set `allowed_cidrs` in your `terraform.tfvars`:
+
+```hcl
+# Allow access from your IP only
+allowed_cidrs = ["YOUR.PUBLIC.IP/32"]
+
+# Or from a specific CIDR range (e.g. office network)
+allowed_cidrs = ["203.0.113.0/24"]
+```
+
 ## Architecture
 
 ```
